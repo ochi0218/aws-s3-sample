@@ -17,8 +17,10 @@ import jp.gr.java_conf.ochi0218.com.amazonaws.services.s3.AmazonS3Remover;
 import jp.gr.java_conf.ochi0218.com.amazonaws.services.s3.AmazonS3Uploader;
 import jp.gr.java_conf.ochi0218.com.amazonaws.services.s3.config.AmazonApiConfiguration;
 import jp.gr.java_conf.ochi0218.com.amazonaws.services.s3.config.AmazonS3Configuration;
+import jp.gr.java_conf.ochi0218.com.amazonaws.services.s3.context.AmazonS3FinderContext;
 import jp.gr.java_conf.ochi0218.com.amazonaws.services.s3.context.AmazonS3UploadDirectoryContext;
 import jp.gr.java_conf.ochi0218.com.amazonaws.services.s3.dto.AmazonS3UploadStatus;
+import jp.gr.java_conf.ochi0218.com.amazonaws.services.s3.dto.S3ObjectList;
 import jp.gr.java_conf.ochi0218.com.amazonaws.services.s3.task.AmazonS3UploaderTask;
 
 import org.apache.commons.logging.Log;
@@ -152,41 +154,67 @@ public class AmazonS3ClientWrapperImpl implements AmazonS3ClientWrapper {
      * {@inheritDoc}
      */
     @Override
-    public List<String> findFiles(String prefix) {
-        checkNotNull(prefix);
-
-        if (AmazonApiConfiguration.isDryRun()) {
-            LOGGER.info(String.format("[DryRun] find object for bucketName=%s, prefix=%s", bucketName, prefix));
-            return new ArrayList<String>();
-        }
-
-        AmazonS3Client amazonS3Client = AmazonS3ClientHolder.currentClient();
-        ObjectListing objectListing = amazonS3Client.listObjects(bucketName, prefix);
-        if (objectListing == null) {
-            return new ArrayList<String>();
-        }
-
-        List<String> fileKeys = new ArrayList<String>();
-        for (S3ObjectSummary s3ObjectSummary : objectListing.getObjectSummaries()) {
-            fileKeys.add(s3ObjectSummary.getKey());
-        }
-
-        return fileKeys;
+    public S3ObjectList findFiles(String prefix) {
+        return findFiles(prefix, AmazonS3FinderContext.DEFUALT);
     }
 
     /**
      * {@inheritDoc}
      */
     @Override
-    public List<String> findDirectories(String prefix) {
+    public S3ObjectList findFiles(String prefix, AmazonS3FinderContext context) {
+        checkNotNull(prefix);
+
+        if (AmazonApiConfiguration.isDryRun()) {
+            LOGGER.info(String.format("[DryRun] find object for bucketName=%s, prefix=%s", bucketName, prefix));
+            return new S3ObjectList(new ArrayList<String>());
+        }
+
+        AmazonS3Client amazonS3Client = AmazonS3ClientHolder.currentClient();
+
+        ListObjectsRequest request = new ListObjectsRequest(bucketName, prefix, context.getMarker(), null, context.getMaxKeys());
+        ObjectListing list = amazonS3Client.listObjects(request);
+        if (list == null) {
+            return new S3ObjectList(new ArrayList<String>());
+        }
+
+        List<String> fileKeys = new ArrayList<String>();
+        for (S3ObjectSummary s3ObjectSummary : list.getObjectSummaries()) {
+            fileKeys.add(s3ObjectSummary.getKey());
+        }
+
+        return new S3ObjectList(fileKeys, list.getMarker());
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public S3ObjectList findDirectories() {
+        return findDirectories(null);
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public S3ObjectList findDirectories(String prefix) {
+        return findDirectories(prefix, AmazonS3FinderContext.DEFUALT);
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public S3ObjectList findDirectories(String prefix, AmazonS3FinderContext context) {
         checkNotNull(prefix);
 
         if (AmazonApiConfiguration.isDryRun()) {
             LOGGER.info(String.format("[DryRun] find direcotries for bucketName=%s, fileOrDirectoryPrefix=%s", bucketName, prefix));
-            return new ArrayList<String>();
+            return new S3ObjectList(new ArrayList<String>());
         }
 
-        ListObjectsRequest request = new ListObjectsRequest(bucketName, null, null, "/", null);
+        ListObjectsRequest request = new ListObjectsRequest(bucketName, context.getMarker(), null, "/", context.getMaxKeys());
 
         AmazonS3Client amazonS3Client = AmazonS3ClientHolder.currentClient();
         ObjectListing list = amazonS3Client.listObjects(request);
@@ -197,7 +225,7 @@ public class AmazonS3ClientWrapperImpl implements AmazonS3ClientWrapper {
             list = amazonS3Client.listNextBatchOfObjects(list);
         } while (list.getMarker() != null);
 
-        return directories;
+        return new S3ObjectList(directories, list.getMarker());
     }
 
     /**

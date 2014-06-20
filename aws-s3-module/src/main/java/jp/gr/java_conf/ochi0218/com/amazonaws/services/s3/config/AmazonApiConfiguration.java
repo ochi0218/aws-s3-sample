@@ -6,7 +6,7 @@ import com.amazonaws.auth.BasicAWSCredentials;
 import com.amazonaws.retry.PredefinedRetryPolicies;
 
 /**
- * S3の設定情報。
+ * AmazonAPIの設定情報。
  */
 public class AmazonApiConfiguration {
     /** AWS情報 */

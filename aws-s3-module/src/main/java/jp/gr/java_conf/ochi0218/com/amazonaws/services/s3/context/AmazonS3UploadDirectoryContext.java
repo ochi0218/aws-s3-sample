@@ -1,6 +1,7 @@
 package jp.gr.java_conf.ochi0218.com.amazonaws.services.s3.context;
 
-import com.amazonaws.services.s3.model.PutObjectRequest;
+import com.amazonaws.services.s3.model.AccessControlList;
+import com.amazonaws.services.s3.model.CannedAccessControlList;
 
 /**
  * AmazonS3のアップロードする時のコンテキスト。
@@ -15,8 +16,11 @@ public class AmazonS3UploadDirectoryContext {
     /** 終了時にファイルを削除するか */
     private boolean fileDeleteOnFinish = true;
 
-    /** デフォルトのリクエスト */
-    private PutObjectRequest defaultRequest = null;
+    /** アクセスコントロール */
+    private CannedAccessControlList cannedAcl = null;
+
+    /** アクセスコントロールリスト */
+    private AccessControlList accessControlList = null;
 
     /** デフォルト */
     public static final AmazonS3UploadDirectoryContext DEFAULT = new AmazonS3UploadDirectoryContext();
@@ -46,11 +50,19 @@ public class AmazonS3UploadDirectoryContext {
     }
 
     /**
-     * defaultRequestを取得する<br>
-     * @return defaultRequest
+     * cannedAclを取得する<br>
+     * @return cannedAcl
      */
-    public PutObjectRequest getDefaultRequest() {
-        return defaultRequest;
+    public CannedAccessControlList getCannedAcl() {
+        return cannedAcl;
+    }
+
+    /**
+     * accessControlListを取得する<br>
+     * @return accessControlList
+     */
+    public AccessControlList getAccessControlList() {
+        return accessControlList;
     }
 
     /**
@@ -84,12 +96,22 @@ public class AmazonS3UploadDirectoryContext {
     }
 
     /**
-     * defaultRequestを設定する<br>
-     * @param defaultRequest defaultRequest
+     * cannedAclを設定する<br>
+     * @param cannedAcl cannedAcl
      * @return このインスタンス自身
      */
-    public AmazonS3UploadDirectoryContext defaultRequest(PutObjectRequest defaultRequest) {
-        this.defaultRequest = defaultRequest;
+    public AmazonS3UploadDirectoryContext cannedAcl(CannedAccessControlList cannedAcl) {
+        this.cannedAcl = cannedAcl;
+        return this;
+    }
+
+    /**
+     * accessControlListを設定する<br>
+     * @param accessControlList accessControlList
+     * @return このインスタンス自身
+     */
+    public AmazonS3UploadDirectoryContext accessControlList(AccessControlList accessControlList) {
+        this.accessControlList = accessControlList;
         return this;
     }
 }
