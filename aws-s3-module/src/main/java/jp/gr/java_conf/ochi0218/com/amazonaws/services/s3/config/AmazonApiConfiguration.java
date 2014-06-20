@@ -21,9 +21,9 @@ public class AmazonApiConfiguration {
      * @param newAwsSecretKey AWSシークレットキー
      * @param newDryRun 空実行するかどうか
      */
-    public static void configure(String newAwsAccessKey, String newAwsSecretKey, String newDryRun) {
+    public static void configure(String newAwsAccessKey, String newAwsSecretKey, boolean newDryRun) {
         awsCredentials = new BasicAWSCredentials(newAwsAccessKey, newAwsSecretKey);
-        dryRun = Boolean.valueOf(newDryRun);
+        dryRun = newDryRun;
     }
 
     /**
