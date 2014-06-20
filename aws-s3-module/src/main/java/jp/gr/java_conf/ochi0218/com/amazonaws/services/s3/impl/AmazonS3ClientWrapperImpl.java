@@ -68,15 +68,17 @@ public class AmazonS3ClientWrapperImpl implements AmazonS3ClientWrapper {
     @Override
     public int uploadDirectory(File directory, AmazonS3UploadDirectoryContext context) {
         checkNotNull(directory);
-        checkArgument(directory.exists() && directory.isDirectory());
+        checkArgument(directory.exists() && directory.isDirectory() && directory.listFiles().length > 0);
 
         if (AmazonApiConfiguration.isDryRun()) {
-            LOGGER.info(String.format("[DryRun] upload directory of %s", directory.getName()));
+            LOGGER.info(String.format("[DryRun] upload directory of %s, bucketName=%s", directory.getName(), bucketName));
             LOGGER.debug("--------------- directory contents start ---------------");
             for (File file : directory.listFiles()) {
                 LOGGER.info(String.format("filename : %s", file.getName()));
             }
             LOGGER.debug("--------------- directory contents end ---------------");
+
+            return 0;
         }
 
         int total = directory.listFiles().length;
@@ -138,7 +140,8 @@ public class AmazonS3ClientWrapperImpl implements AmazonS3ClientWrapper {
         checkArgument(file.exists() && file.isFile());
 
         if (AmazonApiConfiguration.isDryRun()) {
-            LOGGER.info(String.format("[DryRun] upload file of %s", file.getName()));
+            LOGGER.info(String.format("[DryRun] upload file of %s, bucketName=%s", file.getName(), bucketName));
+            return true;
         }
 
         AmazonS3UploadStatus status = new AmazonS3UploaderTask(bucketName, file, context.getPrefix(), context.isFileDeleteOnFinish()).call();
@@ -153,7 +156,7 @@ public class AmazonS3ClientWrapperImpl implements AmazonS3ClientWrapper {
         checkNotNull(prefix);
 
         if (AmazonApiConfiguration.isDryRun()) {
-            LOGGER.info(String.format("[DryRun] find object for bucketName=%s, AmazonApiConfiguration=%s", bucketName, prefix));
+            LOGGER.info(String.format("[DryRun] find object for bucketName=%s, prefix=%s", bucketName, prefix));
             return new ArrayList<String>();
         }
 
