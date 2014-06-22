@@ -104,7 +104,7 @@ public class AmazonS3ClientWrapperImpl implements AmazonS3ClientWrapper {
                 if (uploadStatus.isSuccess()) {
                     uploaded++;
                 } else {
-                    LOGGER.warn(String.format("upload error of %s", uploadStatus.getFileKey()));
+                    LOGGER.warn(String.format("upload error of %s", uploadStatus.getFileKey()), uploadStatus.getErrorCause());
                     if (context.isStopOnError()) {
                         executor.shutdownNow();
                     }
@@ -207,8 +207,6 @@ public class AmazonS3ClientWrapperImpl implements AmazonS3ClientWrapper {
      */
     @Override
     public S3ObjectList findDirectories(String prefix, AmazonS3FinderContext context) {
-        checkNotNull(prefix);
-
         if (AmazonApiConfiguration.isDryRun()) {
             LOGGER.info(String.format("[DryRun] find direcotries for bucketName=%s, fileOrDirectoryPrefix=%s", bucketName, prefix));
             return new S3ObjectList(new ArrayList<String>());

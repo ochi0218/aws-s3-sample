@@ -66,7 +66,7 @@ public class AmazonS3UploaderTask implements Callable<AmazonS3UploadStatus> {
 
             return new AmazonS3UploadStatus(key, true);
         } catch (AmazonClientException e) {
-            return new AmazonS3UploadStatus(key, false);
+            return new AmazonS3UploadStatus(key, false, e);
         } finally {
             if (deleteOnFinish) {
                 FileUtils.deleteQuietly(file);
